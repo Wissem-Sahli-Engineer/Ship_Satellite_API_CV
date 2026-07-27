@@ -1,0 +1,7 @@
+ultralytics
+fastapi
+uvicorn
+pandas
+numpy
+matplotlib
+scikit-learn
