@@ -1,4 +1,6 @@
 ultralytics
+Keras
+tensorflow
 fastapi
 uvicorn
 pandas
