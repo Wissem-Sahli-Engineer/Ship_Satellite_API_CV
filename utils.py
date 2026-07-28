@@ -4,6 +4,11 @@ import numpy as np
 
 def format(image):
     
+    """
+    # Convert BGR (OpenCV default) to RGB (Keras expectation)
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    """
+    
     # Resize the raw image into (224-height,224-width) pixels
     image = cv2.resize(image, (224, 224), interpolation=cv2.INTER_AREA)
 
