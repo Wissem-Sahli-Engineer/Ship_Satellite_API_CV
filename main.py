@@ -5,6 +5,13 @@ from tf_keras.models import load_model
 # pyrefly: ignore [missing-import]
 import numpy as np
 from utils import format
+# pyrefly: ignore [missing-import]
+from pydantic import BaseModel
+# pyrefly: ignore [missing-import]
+from fastapi.middleware. cors import CORSMiddleware
+
+class Image (BaseModel):
+    image_url: str
 
 
 
@@ -22,12 +29,22 @@ app = FastAPI()
 source .venv/bin/activate && uvicorn main:app --reload
 """
 
+origins = ["*"]
+app.add_middleware(CORSMiddleware, 
+                    allow_origins=origins, 
+                    allow_credentials=True, 
+                    allow_methods=["*"], 
+                    allow_headers=["*"],
+)
+
 @app.get("/")
 def read_root():
     return {"message": "Ship Detection API is up and running!"}
 
 @app.post('/classify')
-def classify(img_url):
+def classify(image : Image):
+
+    img_url = image.image_url
     
     image = format(img_url)
 

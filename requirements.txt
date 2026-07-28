@@ -1,9 +1,7 @@
-ultralytics
-Keras
 tensorflow
 fastapi
 uvicorn
-pandas
 numpy
-matplotlib
-scikit-learn
+tf-keras
+pillow
+requests
