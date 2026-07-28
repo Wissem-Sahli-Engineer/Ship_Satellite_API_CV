@@ -1,0 +1,2 @@
+0 1-Ship
+1 0-no ship
