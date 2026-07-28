@@ -16,7 +16,7 @@ class Image (BaseModel):
 
 
 # Load the model
-model = load_model("models/model_3/keras_Model.h5", compile=False)
+model = load_model("models/model_3/keras_model.h5", compile=False)
 
 # Load the labels
 class_names = open("models/model_3/labels.txt", "r").readlines()
