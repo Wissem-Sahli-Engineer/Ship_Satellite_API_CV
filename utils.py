@@ -43,9 +43,12 @@ def format(image_source):
     else:
         raise TypeError(f"Unsupported image input type: {type(image_source)}")
 
+    # 1. Downscale crisp high-res image to tiny satellite resolution (80x80)
+    tiny = image.resize((80, 80), Image.Resampling.NEAREST)
+
     # 2. Resize and crop to 224x224 (Teachable Machine pipeline)
     size = (224, 224)
-    image = ImageOps.fit(image, size, Image.Resampling.LANCZOS)
+    image = ImageOps.fit(tiny, size, Image.Resampling.LANCZOS)
 
     # 3. Convert to float32 array and normalize to [-1.0, 1.0]
     image_array = np.asarray(image, dtype=np.float32)
