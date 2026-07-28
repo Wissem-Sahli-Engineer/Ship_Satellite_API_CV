@@ -1,2 +1,4 @@
 data/archive/shipsnet.json
-.venv
+.venv/
+__pycache__/
+.DS_Store
