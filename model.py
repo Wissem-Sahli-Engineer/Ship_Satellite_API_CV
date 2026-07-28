@@ -10,14 +10,15 @@ from utils import format
 np.set_printoptions(suppress=True)
 
 # Load the model
-model = load_model("models/model_2/keras_model.h5", compile=False)
+model = load_model("models/model_3/keras_model.h5", compile=False)
 
 # Load the labels
-class_names = open("models/model_2/labels.txt", "r").readlines()
+class_names = open("models/model_3/labels.txt", "r").readlines()
 
 ship_path = Path("data/no_ship")
 
 errors = 0
+i = 0
 
 for file in ship_path.iterdir():
     
@@ -39,12 +40,15 @@ for file in ship_path.iterdir():
     class_name = class_names[index]
     confidence_score = prediction[0][index]
 
-    if index == 0:
+    if index == 1:
         errors += 1
 
     # Print prediction and confidence score
-    print("Class:", class_name[2:], end="")
+    print("Class:", class_name, end="")
     print("Confidence Score:", str(np.round(confidence_score * 100))[:-2], "%")
+
+    i += 1 
+    if i == 1000: break
 
 print(errors)
 print(f'Accuracy : {1 - errors/1000}')

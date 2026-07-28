@@ -1,21 +1,40 @@
-import cv2
+# pyrefly: ignore [missing-import]
+from PIL import Image, ImageOps
 # pyrefly: ignore [missing-import]
 import numpy as np
+from pathlib import Path
 
-def format(image):
-    
+def format(image_source):
     """
-    # Convert BGR (OpenCV default) to RGB (Keras expectation)
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    Preprocesses an image for Teachable Machine models using PIL.
+    Accepts:
+    - String / Path (e.g. "data/ship/image.png")
+    - PIL Image object
+    - NumPy Array (e.g. from cv2.imread or OpenCV)
     """
-    
-    # Resize the raw image into (224-height,224-width) pixels
-    image = cv2.resize(image, (224, 224), interpolation=cv2.INTER_AREA)
+    # 1. Convert input to a PIL Image depending on its type
+    if isinstance(image_source, (str, Path)):
+        # It's a file path
+        image = Image.open(image_source).convert("RGB")
+    elif isinstance(image_source, np.ndarray):
+        # It's a NumPy array (e.g., from OpenCV)
+        # OpenCV uses BGR, so swap BGR -> RGB before passing to PIL
+        if len(image_source.shape) == 3 and image_source.shape[2] == 3:
+            image_source = image_source[:, :, ::-1]  # BGR to RGB
+        image = Image.fromarray(image_source).convert("RGB")
+    elif isinstance(image_source, Image.Image):
+        # It's already a PIL Image
+        image = image_source.convert("RGB")
+    else:
+        raise TypeError(f"Unsupported image input type: {type(image_source)}")
 
-    # Make the image a numpy array and reshape it to the models input shape.
-    image = np.asarray(image, dtype=np.float32).reshape(1, 224, 224, 3)
+    # 2. Resize and crop exactly like Teachable Machine (224x224 with LANCZOS)
+    size = (224, 224)
+    image = ImageOps.fit(image, size, Image.Resampling.LANCZOS)
 
-    # Normalize the image array
-    image = (image / 127.5) - 1
+    # 3. Convert to float32 array and normalize to [-1.0, 1.0]
+    image_array = np.asarray(image, dtype=np.float32)
+    normalized_image = (image_array / 127.5) - 1.0
 
-    return image
+    # 4. Add batch dimension: shape (1, 224, 224, 3)
+    return np.expand_dims(normalized_image, axis=0)
