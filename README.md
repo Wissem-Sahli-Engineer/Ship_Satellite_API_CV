@@ -5,7 +5,9 @@
 [![TensorFlow](https://img.shields.io/badge/TensorFlow-2.21-FF6F00?style=for-the-badge&logo=tensorflow&logoColor=white)](https://www.tensorflow.org/)
 [![Docker](https://img.shields.io/badge/Docker-Enabled-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
 
-An end-to-end Computer Vision REST API designed to detect ships from satellite imagery. Powered by a fine-tuned MobileNet architecture trained via Google Teachable Machine and deployed using **FastAPI**, **tf-keras**, **PIL**, and **Docker** for seamless cloud deployment (Hugging Face Spaces, AWS, GCP, etc.).
+An end-to-end Computer Vision REST API designed to detect ships from satellite imagery. Powered by a fine-tuned MobileNet architecture trained via Google Teachable Machine and deployed using **FastAPI**, **tf-keras**, **PIL**, and **Docker** for seamless cloud deployment (Hugging Face Spaces, AWS, Render, etc.).
+
+[Visit Link](https://ship-satellite-api-cv.onrender.com/docs#/default/classify_classify_post) : it takes some time to load !
 
 ---
 
