@@ -1,0 +1,1192 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nautilus AI — Satellite Ship Classification</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --deep-space: #020617;
+        --ocean-midnight: #0f172a;
+        --glass-bg: rgba(15, 23, 42, 0.6);
+        --glass-border: rgba(148, 163, 184, 0.1);
+        --cyan-glow: #06b6d4;
+        --cyan-dim: rgba(6, 182, 212, 0.15);
+        --text-primary: #f8fafc;
+        --text-secondary: #94a3b8;
+        --accent-rose: #f43f5e;
+        --success: #10b981;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        font-family: "Inter", sans-serif;
+        background: var(--deep-space);
+        color: var(--text-primary);
+        overflow-x: hidden;
+        min-height: 100vh;
+      }
+
+      h1,
+      h2,
+      h3,
+      h4 {
+        font-family: "Space Grotesk", sans-serif;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+      }
+
+      /* Animated Background Canvas */
+      #starfield {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 0;
+        pointer-events: none;
+      }
+
+      /* Navigation */
+      nav {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 100;
+        padding: 1.5rem 3rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: linear-gradient(
+          to bottom,
+          rgba(2, 6, 23, 0.9),
+          transparent
+        );
+        backdrop-filter: blur(10px);
+        transition: all 0.4s ease;
+      }
+
+      nav.scrolled {
+        background: rgba(2, 6, 23, 0.85);
+        backdrop-filter: blur(20px);
+        border-bottom: 1px solid var(--glass-border);
+        padding: 1rem 3rem;
+      }
+
+      .logo {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 1.5rem;
+        font-weight: 700;
+        background: linear-gradient(
+          135deg,
+          var(--text-primary),
+          var(--cyan-glow)
+        );
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        cursor: pointer;
+      }
+
+      .logo::before {
+        content: "◈";
+        color: var(--cyan-glow);
+        -webkit-text-fill-color: var(--cyan-glow);
+        font-size: 1.8rem;
+      }
+
+      .nav-links {
+        display: flex;
+        gap: 2.5rem;
+        list-style: none;
+      }
+
+      .nav-links a {
+        color: var(--text-secondary);
+        text-decoration: none;
+        font-size: 0.9rem;
+        font-weight: 500;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        position: relative;
+        transition: color 0.3s ease;
+        cursor: pointer;
+      }
+
+      .nav-links a::after {
+        content: "";
+        position: absolute;
+        bottom: -4px;
+        left: 0;
+        width: 0;
+        height: 2px;
+        background: var(--cyan-glow);
+        transition: width 0.3s ease;
+        box-shadow: 0 0 10px var(--cyan-glow);
+      }
+
+      .nav-links a:hover {
+        color: var(--text-primary);
+      }
+
+      .nav-links a:hover::after,
+      .nav-links a.active::after {
+        width: 100%;
+      }
+
+      .nav-links a.active {
+        color: var(--text-primary);
+      }
+
+      /* Main Container */
+      .page {
+        position: relative;
+        z-index: 1;
+        min-height: 100vh;
+        display: none;
+        opacity: 0;
+        transform: translateY(20px);
+        transition:
+          opacity 0.6s ease,
+          transform 0.6s ease;
+      }
+
+      .page.active {
+        display: block;
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      /* Hero Section */
+      .hero {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 2rem;
+        position: relative;
+      }
+
+      .hero-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        background: var(--cyan-dim);
+        border: 1px solid rgba(6, 182, 212, 0.3);
+        border-radius: 100px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--cyan-glow);
+        margin-bottom: 2rem;
+        animation: fadeInDown 0.8s ease;
+      }
+
+      .hero-badge::before {
+        content: "";
+        width: 6px;
+        height: 6px;
+        background: var(--cyan-glow);
+        border-radius: 50%;
+        box-shadow: 0 0 10px var(--cyan-glow);
+        animation: pulse 2s infinite;
+      }
+
+      .hero h1 {
+        font-size: clamp(2.5rem, 6vw, 5rem);
+        line-height: 1.1;
+        margin-bottom: 1.5rem;
+        max-width: 900px;
+        animation: fadeInUp 0.8s ease 0.1s both;
+      }
+
+      .hero h1 span {
+        background: linear-gradient(135deg, var(--cyan-glow), #3b82f6);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .hero-subtitle {
+        font-size: 1.125rem;
+        color: var(--text-secondary);
+        max-width: 600px;
+        line-height: 1.7;
+        margin-bottom: 3rem;
+        animation: fadeInUp 0.8s ease 0.2s both;
+      }
+
+      /* Input Section */
+      .input-container {
+        width: 100%;
+        max-width: 700px;
+        animation: fadeInUp 0.8s ease 0.3s both;
+        position: relative;
+      }
+
+      .url-input-wrapper {
+        position: relative;
+        background: var(--glass-bg);
+        backdrop-filter: blur(20px);
+        border: 1px solid var(--glass-border);
+        border-radius: 20px;
+        padding: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+      }
+
+      .url-input-wrapper:focus-within {
+        border-color: rgba(6, 182, 212, 0.5);
+        box-shadow:
+          0 20px 50px rgba(0, 0, 0, 0.3),
+          0 0 30px rgba(6, 182, 212, 0.1);
+        transform: translateY(-2px);
+      }
+
+      .url-input-wrapper input {
+        flex: 1;
+        background: transparent;
+        border: none;
+        outline: none;
+        color: var(--text-primary);
+        font-size: 1rem;
+        padding: 1rem 1.5rem;
+        font-family: "Inter", sans-serif;
+      }
+
+      .url-input-wrapper input::placeholder {
+        color: var(--text-secondary);
+      }
+
+      .analyze-btn {
+        background: linear-gradient(135deg, var(--cyan-glow), #0891b2);
+        color: white;
+        border: none;
+        padding: 1rem 2.5rem;
+        border-radius: 16px;
+        font-family: "Space Grotesk", sans-serif;
+        font-weight: 600;
+        font-size: 0.95rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        white-space: nowrap;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .analyze-btn::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.2),
+          transparent
+        );
+        transition: left 0.5s ease;
+      }
+
+      .analyze-btn:hover::before {
+        left: 100%;
+      }
+
+      .analyze-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 30px rgba(6, 182, 212, 0.4);
+      }
+
+      .analyze-btn:active {
+        transform: translateY(0);
+      }
+
+      .analyze-btn.loading {
+        pointer-events: none;
+        opacity: 0.8;
+      }
+
+      .analyze-btn.loading::after {
+        content: "";
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-top-color: white;
+        border-radius: 50%;
+        margin-left: 8px;
+        animation: spin 0.8s linear infinite;
+        vertical-align: middle;
+      }
+
+      /* Results Section */
+      .results-container {
+        margin-top: 3rem;
+        width: 100%;
+        max-width: 900px;
+        animation: fadeInUp 0.6s ease;
+      }
+
+      .result-card {
+        background: var(--glass-bg);
+        backdrop-filter: blur(20px);
+        border: 1px solid var(--glass-border);
+        border-radius: 24px;
+        padding: 2.5rem;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+        align-items: center;
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .result-card::before {
+        content: "";
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(circle, var(--cyan-dim), transparent 70%);
+        pointer-events: none;
+      }
+
+      .result-image {
+        width: 100%;
+        aspect-ratio: 1;
+        border-radius: 16px;
+        object-fit: cover;
+        border: 1px solid var(--glass-border);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      }
+
+      .result-details h3 {
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--text-secondary);
+        margin-bottom: 1rem;
+      }
+
+      .ship-class {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        background: linear-gradient(
+          135deg,
+          var(--text-primary),
+          var(--cyan-glow)
+        );
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .confidence-bar {
+        margin-top: 1.5rem;
+      }
+
+      .confidence-bar label {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+        margin-bottom: 0.5rem;
+      }
+
+      .confidence-track {
+        height: 8px;
+        background: rgba(148, 163, 184, 0.1);
+        border-radius: 100px;
+        overflow: hidden;
+        position: relative;
+      }
+
+      .confidence-fill {
+        height: 100%;
+        background: linear-gradient(90deg, var(--cyan-glow), #3b82f6);
+        border-radius: 100px;
+        transition: width 1.5s cubic-bezier(0.22, 1, 0.36, 1);
+        box-shadow: 0 0 20px rgba(6, 182, 212, 0.3);
+        width: 0;
+      }
+
+      .error-message {
+        background: rgba(244, 63, 94, 0.1);
+        border: 1px solid rgba(244, 63, 94, 0.3);
+        color: var(--accent-rose);
+        padding: 1.5rem;
+        border-radius: 16px;
+        text-align: center;
+        backdrop-filter: blur(10px);
+      }
+
+      /* About Page */
+      .about-hero {
+        min-height: 60vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 8rem 2rem 4rem;
+        position: relative;
+      }
+
+      .about-hero h1 {
+        font-size: clamp(2rem, 5vw, 4rem);
+        margin-bottom: 1.5rem;
+      }
+
+      .about-hero p {
+        font-size: 1.125rem;
+        color: var(--text-secondary);
+        max-width: 700px;
+        line-height: 1.8;
+      }
+
+      .content-section {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 4rem 2rem;
+      }
+
+      .feature-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        margin-top: 4rem;
+      }
+
+      .feature-card {
+        background: var(--glass-bg);
+        backdrop-filter: blur(20px);
+        border: 1px solid var(--glass-border);
+        border-radius: 24px;
+        padding: 2.5rem;
+        transition: all 0.4s ease;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .feature-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 3px;
+        background: linear-gradient(90deg, var(--cyan-glow), transparent);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+      }
+
+      .feature-card:hover {
+        transform: translateY(-5px);
+        border-color: rgba(6, 182, 212, 0.3);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+      }
+
+      .feature-card:hover::before {
+        opacity: 1;
+      }
+
+      .feature-icon {
+        width: 48px;
+        height: 48px;
+        background: var(--cyan-dim);
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        margin-bottom: 1.5rem;
+        border: 1px solid rgba(6, 182, 212, 0.2);
+      }
+
+      .feature-card h3 {
+        font-size: 1.25rem;
+        margin-bottom: 0.75rem;
+      }
+
+      .feature-card p {
+        color: var(--text-secondary);
+        line-height: 1.7;
+        font-size: 0.95rem;
+      }
+
+      .tech-stack {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-top: 2rem;
+        justify-content: center;
+      }
+
+      .tech-tag {
+        padding: 0.5rem 1.25rem;
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        border-radius: 100px;
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+        transition: all 0.3s ease;
+      }
+
+      .tech-tag:hover {
+        border-color: var(--cyan-glow);
+        color: var(--cyan-glow);
+        transform: translateY(-2px);
+      }
+
+      .gallery {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.5rem;
+        margin-top: 3rem;
+      }
+
+      .gallery-item {
+        aspect-ratio: 16/10;
+        border-radius: 16px;
+        overflow: hidden;
+        border: 1px solid var(--glass-border);
+        position: relative;
+        cursor: pointer;
+        transition: all 0.4s ease;
+      }
+
+      .gallery-item img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.6s ease;
+      }
+
+      .gallery-item:hover {
+        transform: translateY(-5px);
+        border-color: rgba(6, 182, 212, 0.3);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+      }
+
+      .gallery-item:hover img {
+        transform: scale(1.1);
+      }
+
+      .gallery-item::after {
+        content: attr(data-label);
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 1.5rem 1rem 1rem;
+        background: linear-gradient(to top, rgba(2, 6, 23, 0.9), transparent);
+        font-family: "Space Grotesk", sans-serif;
+        font-weight: 600;
+        font-size: 0.9rem;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+      }
+
+      .gallery-item:hover::after {
+        opacity: 1;
+      }
+
+      /* Footer */
+      footer {
+        text-align: center;
+        padding: 3rem 2rem;
+        color: var(--text-secondary);
+        font-size: 0.875rem;
+        border-top: 1px solid var(--glass-border);
+        margin-top: 4rem;
+      }
+
+      /* Animations */
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes fadeInDown {
+        from {
+          opacity: 0;
+          transform: translateY(-20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.5;
+        }
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* Scrollbar */
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+
+      ::-webkit-scrollbar-track {
+        background: var(--deep-space);
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background: var(--ocean-midnight);
+        border-radius: 4px;
+      }
+
+      ::-webkit-scrollbar-thumb:hover {
+        background: var(--cyan-glow);
+      }
+
+      /* Responsive */
+      @media (max-width: 768px) {
+        nav {
+          padding: 1rem 1.5rem;
+        }
+
+        .nav-links {
+          gap: 1.5rem;
+        }
+
+        .result-card {
+          grid-template-columns: 1fr;
+        }
+
+        .gallery {
+          grid-template-columns: 1fr;
+        }
+
+        .url-input-wrapper {
+          flex-direction: column;
+          padding: 1rem;
+        }
+
+        .analyze-btn {
+          width: 100%;
+        }
+      }
+
+      /* Particle glow effect */
+      .glow-orb {
+        position: fixed;
+        border-radius: 50%;
+        filter: blur(80px);
+        opacity: 0.15;
+        pointer-events: none;
+        z-index: 0;
+        animation: float 20s infinite ease-in-out;
+      }
+
+      .glow-orb:nth-child(1) {
+        width: 400px;
+        height: 400px;
+        background: var(--cyan-glow);
+        top: 10%;
+        left: 10%;
+        animation-delay: 0s;
+      }
+
+      .glow-orb:nth-child(2) {
+        width: 300px;
+        height: 300px;
+        background: #3b82f6;
+        bottom: 20%;
+        right: 10%;
+        animation-delay: -5s;
+      }
+
+      .glow-orb:nth-child(3) {
+        width: 250px;
+        height: 250px;
+        background: var(--accent-rose);
+        top: 50%;
+        left: 50%;
+        animation-delay: -10s;
+        opacity: 0.08;
+      }
+
+      @keyframes float {
+        0%,
+        100% {
+          transform: translate(0, 0) scale(1);
+        }
+        33% {
+          transform: translate(30px, -50px) scale(1.1);
+        }
+        66% {
+          transform: translate(-20px, 20px) scale(0.9);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Background Effects -->
+    <canvas id="starfield"></canvas>
+    <div class="glow-orb"></div>
+    <div class="glow-orb"></div>
+    <div class="glow-orb"></div>
+
+    <!-- Navigation -->
+    <nav id="navbar">
+      <div class="logo" onclick="showPage('home')">Nautilus AI</div>
+      <ul class="nav-links">
+        <li>
+          <a onclick="showPage('home')" id="nav-home" class="active">Detect</a>
+        </li>
+        <li><a onclick="showPage('about')" id="nav-about">About</a></li>
+      </ul>
+    </nav>
+
+    <!-- HOME PAGE -->
+    <div id="page-home" class="page active">
+      <section class="hero">
+        <div class="hero-badge">Satellite Computer Vision</div>
+        <h1>Identify Vessels from <span>Orbit</span></h1>
+        <p class="hero-subtitle">
+          Advanced ship classification powered by deep learning. Paste a
+          satellite image URL and our neural network will identify the vessel
+          class in milliseconds.
+        </p>
+
+        <div class="input-container">
+          <div class="url-input-wrapper">
+            <input
+              type="text"
+              id="imageUrl"
+              placeholder="Paste satellite image URL here..."
+              onkeypress="if (event.key === 'Enter') classifyImage();"
+            />
+            <button
+              class="analyze-btn"
+              id="analyzeBtn"
+              onclick="classifyImage()"
+            >
+              Analyze
+            </button>
+          </div>
+
+          <div
+            class="results-container"
+            id="results"
+            style="display: none"
+          ></div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ABOUT PAGE -->
+    <div id="page-about" class="page">
+      <section class="about-hero">
+        <div class="hero-badge">The Project</div>
+        <h1>Seeing the Seas from <span>Above</span></h1>
+        <p>
+          Nautilus AI is a specialized computer vision pipeline designed to
+          classify maritime vessels using satellite imagery. Built with
+          TensorFlow Keras and served through a high-performance FastAPI
+          backend.
+        </p>
+      </section>
+
+      <section class="content-section">
+        <div class="feature-grid">
+          <div class="feature-card">
+            <div class="feature-icon">🛰️</div>
+            <h3>Orbital Intelligence</h3>
+            <p>
+              Trained on diverse satellite datasets to recognize vessel types
+              from aerial perspectives with high accuracy, even in challenging
+              weather conditions.
+            </p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">⚡</div>
+            <h3>Real-Time Inference</h3>
+            <p>
+              Sub-second prediction times through optimized model architecture.
+              The Keras model runs efficiently while maintaining classification
+              precision.
+            </p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">🔧</div>
+            <h3>Teachable Machine</h3>
+            <p>
+              Leveraging Google's Teachable Machine workflow for rapid
+              prototyping and model iteration, enabling quick adaptation to new
+              vessel classes.
+            </p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">🌐</div>
+            <h3>REST API</h3>
+            <p>
+              Clean FastAPI endpoints with automatic documentation, CORS
+              support, and structured JSON responses for easy integration into
+              any stack.
+            </p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">🎯</div>
+            <h3>High Precision</h3>
+            <p>
+              Fine-tuned classification confidence scores help distinguish
+              between similar vessel types like cargo ships, tankers, and
+              fishing vessels.
+            </p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">🚀</div>
+            <h3>Production Ready</h3>
+            <p>
+              Containerized architecture ready for cloud deployment. The model
+              serves predictions through a lightweight, scalable API interface.
+            </p>
+          </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 5rem">
+          <h2 style="margin-bottom: 1rem">Technology Stack</h2>
+          <p style="color: var(--text-secondary); margin-bottom: 2rem">
+            Built with modern tools for reliable performance
+          </p>
+          <div class="tech-stack">
+            <span class="tech-tag">Python</span>
+            <span class="tech-tag">FastAPI</span>
+            <span class="tech-tag">TensorFlow</span>
+            <span class="tech-tag">Keras</span>
+            <span class="tech-tag">Teachable Machine</span>
+            <span class="tech-tag">NumPy</span>
+            <span class="tech-tag">Pydantic</span>
+            <span class="tech-tag">Uvicorn</span>
+          </div>
+        </div>
+
+        <div style="margin-top: 5rem">
+          <h2 style="text-align: center; margin-bottom: 1rem">
+            Satellite Gallery
+          </h2>
+          <p
+            style="
+              text-align: center;
+              color: var(--text-secondary);
+              margin-bottom: 2rem;
+            "
+          >
+            Sample imagery from orbital platforms
+          </p>
+          <div class="gallery">
+            <div class="gallery-item" data-label="Cargo Vessel">
+              <img
+                src="https://images.unsplash.com/photo-1577999499073-3c13eb5e3d86?w=600&h=400&fit=crop"
+                alt="Satellite view of cargo ship"
+              />
+            </div>
+            <div class="gallery-item" data-label="Port Infrastructure">
+              <img
+                src="https://images.unsplash.com/photo-1544552866-d3ed42536cfd?w=600&h=400&fit=crop"
+                alt="Port from above"
+              />
+            </div>
+            <div class="gallery-item" data-label="Open Ocean">
+              <img
+                src="https://images.unsplash.com/photo-1468581263799-911925a49012?w=600&h=400&fit=crop"
+                alt="Ocean satellite view"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <footer>
+        <p>Nautilus AI — Ship Satellite CV API. Built with deep learning.</p>
+      </footer>
+    </div>
+
+    <script>
+      // Starfield Background
+      const canvas = document.getElementById("starfield");
+      const ctx = canvas.getContext("2d");
+      let width, height;
+      let stars = [];
+      let mouse = { x: 0, y: 0 };
+
+      function resize() {
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+      }
+
+      class Star {
+        constructor() {
+          this.reset();
+        }
+
+        reset() {
+          this.x = Math.random() * width;
+          this.y = Math.random() * height;
+          this.z = Math.random() * 2 + 0.5;
+          this.size = Math.random() * 1.5;
+          this.opacity = Math.random() * 0.5 + 0.2;
+          this.speedX = (Math.random() - 0.5) * 0.2;
+          this.speedY = (Math.random() - 0.5) * 0.2;
+        }
+
+        update() {
+          this.x += this.speedX;
+          this.y += this.speedY;
+
+          // Parallax effect
+          const dx = (mouse.x - width / 2) * 0.001 * this.z;
+          const dy = (mouse.y - height / 2) * 0.001 * this.z;
+
+          if (this.x < 0 || this.x > width || this.y < 0 || this.y > height) {
+            this.reset();
+          }
+        }
+
+        draw() {
+          ctx.beginPath();
+          ctx.arc(
+            this.x,
+            ctx.canvas.height - this.y,
+            this.size * this.z,
+            0,
+            Math.PI * 2,
+          );
+          ctx.fillStyle = `rgba(148, 163, 184, ${this.opacity})`;
+          ctx.fill();
+        }
+      }
+
+      function initStars() {
+        stars = [];
+        for (let i = 0; i < 150; i++) {
+          stars.push(new Star());
+        }
+      }
+
+      function animate() {
+        ctx.clearRect(0, 0, width, height);
+        stars.forEach((star) => {
+          star.update();
+          star.draw();
+        });
+        requestAnimationFrame(animate);
+      }
+
+      window.addEventListener("resize", () => {
+        resize();
+        initStars();
+      });
+
+      window.addEventListener("mousemove", (e) => {
+        mouse.x = e.clientX;
+        mouse.y = e.clientY;
+      });
+
+      resize();
+      initStars();
+      animate();
+
+      // Navigation
+      function showPage(pageName) {
+        document
+          .querySelectorAll(".page")
+          .forEach((p) => p.classList.remove("active"));
+        document
+          .querySelectorAll(".nav-links a")
+          .forEach((a) => a.classList.remove("active"));
+
+        document.getElementById(`page-${pageName}`).classList.add("active");
+        document.getElementById(`nav-${pageName}`).classList.add("active");
+
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+
+      // Navbar scroll effect
+      window.addEventListener("scroll", () => {
+        const nav = document.getElementById("navbar");
+        if (window.scrollY > 50) {
+          nav.classList.add("scrolled");
+        } else {
+          nav.classList.remove("scrolled");
+        }
+      });
+
+      // API Integration
+      async function classifyImage() {
+        const urlInput = document.getElementById("imageUrl");
+        const btn = document.getElementById("analyzeBtn");
+        const resultsDiv = document.getElementById("results");
+        const imageUrl = urlInput.value.trim();
+
+        if (!imageUrl) {
+          showError("Please enter an image URL");
+          return;
+        }
+
+        btn.classList.add("loading");
+        btn.textContent = "Analyzing";
+        resultsDiv.style.display = "none";
+
+        try {
+          // IMPORTANT: Change this URL to your actual API endpoint
+          // For local development: http://localhost:8000/classify
+          const API_URL = "https://ship-satellite-api-cv.onrender.com/classify";
+
+          const response = await fetch(API_URL, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ image_url: imageUrl }),
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.detail || "Classification failed");
+          }
+
+          const data = await response.json();
+          showResults(data, imageUrl);
+        } catch (error) {
+          showError(
+            error.message ||
+              "Failed to connect to API. Make sure your FastAPI server is running on localhost:8000",
+          );
+        } finally {
+          btn.classList.remove("loading");
+          btn.textContent = "Analyze";
+        }
+      }
+
+      function showResults(data, imageUrl) {
+        const resultsDiv = document.getElementById("results");
+
+        // Support both key formats safely
+        const prediction = data.Prediction || data["Prediction "] || "Unknown";
+        const confidenceVal =
+          typeof data.Confidence === "number"
+            ? data.Confidence
+            : typeof data["Confidence score "] === "number"
+              ? data["Confidence score "]
+              : 0;
+        const confidencePercent = (confidenceVal * 100).toFixed(1);
+
+        resultsDiv.innerHTML = `
+                <div class="result-card">
+                    <div style="position: relative; z-index: 1;">
+                        <img src="${imageUrl}" class="result-image" alt="Analyzed satellite image" onerror="this.src='https://via.placeholder.com/400x400?text=Image+Not+Available'">
+                    </div>
+                    <div class="result-details" style="position: relative; z-index: 1;">
+                        <h3>Classification Result</h3>
+                        <div class="ship-class">${data.Prediction}</div>
+                        <p style="color: var(--text-secondary); margin-bottom: 2rem;">
+                            Vessel identified through satellite computer vision analysis
+                        </p>
+                        
+                        <div class="confidence-bar">
+                            <label>
+                                <span>Confidence Score</span>
+                                <span style="color: var(--cyan-glow); font-weight: 600;">${confidencePercent}%</span>
+                            </label>
+                            <div class="confidence-track">
+                                <div class="confidence-fill" data-width="${confidencePercent}"></div>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--glass-border);">
+                            <div style="display: flex; gap: 2rem; font-size: 0.875rem;">
+                                <div>
+                                    <div style="color: var(--text-secondary); margin-bottom: 0.25rem;">Model</div>
+                                    <div style="font-weight: 600;">Keras H5</div>
+                                </div>
+                                <div>
+                                    <div style="color: var(--text-secondary); margin-bottom: 0.25rem;">Framework</div>
+                                    <div style="font-weight: 600;">TensorFlow</div>
+                                </div>
+                                <div>
+                                    <div style="color: var(--text-secondary); margin-bottom: 0.25rem;">Status</div>
+                                    <div style="font-weight: 600; color: var(--success);">● Success</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+        resultsDiv.style.display = "block";
+
+        // Animate confidence bar
+        setTimeout(() => {
+          const fill = resultsDiv.querySelector(".confidence-fill");
+          if (fill) {
+            fill.style.width = fill.dataset.width + "%";
+          }
+        }, 100);
+      }
+
+      function showError(message) {
+        const resultsDiv = document.getElementById("results");
+        resultsDiv.innerHTML = `
+                <div class="error-message">
+                    <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">⚠️</div>
+                    <div style="font-weight: 600; margin-bottom: 0.5rem;">Analysis Failed</div>
+                    <div style="font-size: 0.9rem; opacity: 0.8;">${message}</div>
+                </div>
+            `;
+        resultsDiv.style.display = "block";
+      }
+    </script>
+  </body>
+</html>

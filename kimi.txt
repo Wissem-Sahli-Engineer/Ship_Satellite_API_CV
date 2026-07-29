@@ -1,4 +1,4 @@
-# pyrefly: ignore [missing-import]
+i wanna design a website about comouter vision classying images of ships ( in ocean ) from staellite , this my code for the api ( main.py ) # pyrefly: ignore [missing-import]
 from fastapi import FastAPI , HTTPException
 # pyrefly: ignore [missing-import]
 from tf_keras.models import load_model
@@ -67,3 +67,8 @@ def classify(image : Image):
             status_code=400,
             detail=f"Failed to process or classify image: {str(e)}",
         )
+and i deploy it on rendern , https://ship-satellite-api-cv.onrender.com/classify 
+
+i wanna an about the project which the first page like the vortex gallery ( the iamges should be images of ships ) and this the github repo https://github.com/Wissem-Sahli-Engineer/Ship_Satellite_API_CV 
+
+and i want where i can put an url of an image ( display it and should say if it is is a ship or no and a confidence score ) and i wanna hover animation like magnetic ones and i want the technogies used to be in a moving row like the ones used in tech compagnies and i want when hover on images they move , i want the website to like an awaaard website responsive smooth animation and aesthetic ( for the colors used lik the vortex gallery ) 
