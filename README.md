@@ -21,7 +21,7 @@ The deep learning classification backends were trained using **Google Teachable 
 | Model Version | Architecture | Ship Accuracy | No-Ship Accuracy | Key Enhancements / Focus |
 | :--- | :--- | :---: | :---: | :--- |
 | **Model 1** | MobileNet v1 (Default Teachable Machine) | 100.0% | 98.0% | Initial baseline trained on raw satellite image tiles. High recall on ships but slight false-positives on coastal noise. |
-| **Model 2** | MobileNet v1 (Augmented & Fine-tuned) | 98.0% | 99.0% | Added dataset augmentations (rotations, brightness contrast shifts) to reduce false positives on coastline/harbor textures. |
+| **Model 2** | MobileNet v1 | 98.0% | 99.0% | Added dataset augmentations (rotations, brightness contrast shifts) to reduce false positives on coastline/harbor textures. |
 | **Model 3** *(Production)* | MobileNet v1 (Low-Resolution Optimized) | **98.0%** | **99.0%** | Fine-tuned specifically for downscaled $80 \times 80$ satellite tile resolutions with PIL Lanczos/Nearest spatial matching. Deployed in production API. |
 
 ---
